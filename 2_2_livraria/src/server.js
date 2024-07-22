@@ -6,11 +6,13 @@ import conn from "./config/conn.js";
 import "./models/livroModel.js";
 import "./models/funcionarioModel.js";
 import "./models/clienteModel.js";
+import "./models/emprestimoModel.js";
 
 //Criação das rotas
 import livrosRoutes from "./routes/livroRoutes.js";
 import funcionariosRoutes from "./routes/funcionarioRoutes.js";
 import clientesRoutes from "./routes/clienteRoutes.js";
+import emprestimosRoutes from "./routes/emprestimoRoutes.js";
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.use("/funcionarios", funcionariosRoutes);
 //http://localhost:3333/clientes
 app.use("/clientes", clientesRoutes);
 
+//http://localhost:3333/emprestimos
+app.use("/emprestimos", emprestimosRoutes);
 
 const PORT = process.env.PORT;
 
