@@ -29,19 +29,33 @@ export const postClientes = (request, response) => {
     response.status(400).json({ message: "O email é obrigatório!" });
     return;
   }
-  const checkSql = /*sql*/ `SELECT * FROM clientes WHERE email = "${email}"`;
-  conn.query(checkSql, (err, data) => {
+  const checkSql = /*sql*/ `SELECT * FROM clientes WHERE ?? = ?`;
+  const checkInsertSql = ["email", email];
+  conn.query(checkSql, checkInsertSql, (err, data) => {
     if (data.length > 0) {
       response.status(400).json({ msg: "cliente já existe" });
       return;
     }
     const id = uuidv4();
-    const sql = /*sql*/ `
-        INSERT INTO clientes(id, nome, senha, imagem, email)
-        VALUES("${id}","${nome}","${senha}","${imagem}","${email}")
-        `;
 
-    conn.query(sql, (err, data) => {
+    const sql = /*sql*/ `
+      INSERT INTO clientes(??,??,??,??,??)
+      VALUES(?,?,?,?,?)
+      `;
+    const insertData = [
+      "cliente_id",
+      "nome",
+      "senha",
+      "email",
+      "imagem",
+      id,
+      nome,
+      senha,
+      email,
+      imagem,
+    ];
+
+    conn.query(sql, insertData, (err, data) => {
       if (err) {
         console.error(err);
         response.status(500).json({ msg: "Erro ao cadatrar cliente" });
@@ -55,8 +69,10 @@ export const postClientes = (request, response) => {
 export const buscarCliente = (request, response) => {
   const { id } = request.params;
 
-  const sql = /*sql*/ `SELECT * FROM clientes WHERE id = "${id}"`;
-  conn.query(sql, (err, data) => {
+  const sql = /*sql*/ `SELECT * FROM clientes WHERE ?? = ?`;
+  const insertData = ["cliente_id", id];
+
+  conn.query(sql, insertData, (err, data) => {
     if (data.length === 0) {
       response.status(404).json({ msg: "cliente não existe" });
     }
@@ -93,12 +109,25 @@ export const editarCliente = (request, response) => {
     }
 
     //Consulta SQL para atualizar livro
-    const upadateSql = /*sql*/ `UPDATE clientes SET
-        nome = "${nome}", senha = "${senha}", 
-        imagem = "${imagem}", email = "${email}"
-        WHERE id = "${id}"`;
+    const updateSql = /*sql*/ `
+    UPDATE clientes 
+    SET ?? = ?, ?? = ?, ?? = ?, ?? = ? 
+    WHERE ?? = ?;
+    `;
+    const insertData = [
+      "cliente_id",
+      id,
+      "nome",
+      nome,
+      "email",
+      email,
+      "senha",
+      senha,
+      "imagem",
+      imagem,
+    ];
 
-    conn.query(upadateSql, (err) => {
+    conn.query(updateSql, insertData, (err) => {
       if (err) {
         console.error(err);
         response.status(500).json({ msg: "Erro ao atualizar cliente" });
