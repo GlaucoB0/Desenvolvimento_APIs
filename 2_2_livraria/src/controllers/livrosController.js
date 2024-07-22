@@ -207,8 +207,10 @@ export const editarLivro = (request, response) => {
 export const deletarLivro = (request, response) => {
   const { id } = request.params; // pega o id que for passado na rota
 
-  const deleteSql = /*sql*/ `delete from livros where id = "${id}"`;
-  conn.query(deleteSql, (err, info) => {
+  const deleteSql = /*sql*/ `delete from livros where ?? = ?`;
+  const insertData = ["livro_id", id];
+
+  conn.query(deleteSql, insertData, (err, info) => {
     if (err) {
       console.error(err);
       response.status(500).json({ message: "Erro ao deletar livro" });
