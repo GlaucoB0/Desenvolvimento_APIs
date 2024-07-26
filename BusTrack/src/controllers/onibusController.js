@@ -1,122 +1,128 @@
 import conn from "../config/conn.js";
-import { v4 as uuidv4 } from "uuid";
 
-export const getAllOnibus = (request, response) => {
-  const sql = /*sql*/ `SELECT * FROM onibus`;
-
-  conn.query(sql, (err, data, rows) => {
-    console.log(rows);
-    if (err) {
-      console.error(err);
-      response.status(500).json({ msg: "Erro ao listar onibus" });
-      return;
-    }
-    response.status(200).json(data);
-  });
-};
-
-export const postOnibus = (request, response) => {
-  const { placa, modelo, ano_fabricacao, capacidade, id_linha, id_motorista } =
-    request.body;
-
-  if (!placa) {
-    response.status(400).json({ message: "O placa é obrigatório!" });
-    return;
-  }
-  if (!modelo) {
-    response.status(400).json({ message: "O modelo é obrigatório!" });
-    return;
-  }
-  if (!ano_fabricacao) {
-    response.status(400).json({ message: "O ano_fabricacao é obrigatório!" });
-    return;
-  }
-  if (!capacidade) {
-    response.status(400).json({ message: "O capacidade é obrigatório!" });
-    return;
-  }
-  if (!id_linha) {
-    response.status(400).json({ message: "O id_linha é obrigatório!" });
-    return;
-  }
-  if (!id_motorista) {
-    response.status(400).json({ message: "O id_motorista é obrigatório!" });
-    return;
-  }
-
-  const checkSql = /*sql*/ `SELECT * FROM onibus WHERE ?? = ?`;
-  const checkInsertSql = ["placa", placa];
-  conn.query(checkSql, checkInsertSql, (err, data) => {
-    if (data.length > 0) {
-      response.status(400).json({ msg: "onibus já existe" });
-      return;
-    }
-
-    const sql = /*sql*/ `
-      INSERT INTO onibus(??,??,??,??,??, ??)
-      VALUES(?,?,?,?,?,?)
-      `;
-    const insertData = [
-      "placa",
-      "modelo",
-      "ano_fabricacao",
-      "capacidade",
-      "id_linha",
-      "id_motorista",
-      placa,
-      modelo,
-      ano_fabricacao,
-      capacidade,
-      id_linha,
-      id_motorista,
-    ];
-
-    conn.query(sql, insertData, (err, data) => {
-      if (err) {
-        console.error(err);
-        response.status(500).json({ msg: "Erro ao cadatrar onibus" });
-        return;
-      }
-      response.status(201).json({ msg: "criado" });
-    });
-  });
-};
-
-export const buscarOnibus = (request, response) => {
-  const { id } = request.params;
-
-  const sql = /*sql*/ `SELECT * FROM onibus WHERE ?? = ?
+export const getAllOnibus = (req, res) => {
+  const query = `
+    SELECT 
+      onibus.placa AS placa_onibus, 
+      onibus.modelo AS modelo_onibus, 
+      onibus.ano_fabricacao AS ano_fabricacao_onibus, 
+      onibus.capacidade AS capacidade_onibus,
+      linha.nome_linha AS nome_linha,
+      linha.numero_linha AS numero_linha,
+      linha.itinerario AS itinerario_linha,
+      motorista.nome AS nome_motorista,
+      motorista.data_nascimento AS data_nascimento_motorista,
+      motorista.numero_carteira_habilitacao AS numero_carteira_motorista
+    FROM Onibus AS onibus
+    INNER JOIN Linhas AS linha ON onibus.id_linha = linha.linha_id
+    INNER JOIN Motoristas AS motorista ON onibus.id_motorista = motorista.motorista_id
   `;
-  const insertData = ["onibus_id", id];
+  
+  try {
+    conn.query(query, (error, results) => {
+      if (error) {
+        console.error("Erro ao consultar os dados dos ônibus:", error);
+        return res.status(500).json({ message: "Erro ao tentar solicitar dados!" });
+      }
 
-  conn.query(sql, insertData, (err, data) => {
-    if (data.length === 0) {
-      response.status(404).json({ msg: "onibus não existe" });
+      
+      const formattedResults = results.map((result) => ({
+        placa: result.placa_onibus,
+        modelo: result.modelo_onibus,
+        ano_fabricacao: result.ano_fabricacao_onibus,
+        capacidade: result.capacidade_onibus,
+        linha: {
+          nome_linha: result.nome_linha,
+          numero_linha: result.numero_linha,
+          itinerario: result.itinerario_linha,
+        },
+        motorista: {
+          nome: result.nome_motorista,
+          data_nascimento: result.data_nascimento_motorista,
+          numero_carteira_habilitacao: result.numero_carteira_motorista,
+        },
+      }));
+
+      res.status(200).json(formattedResults);
+    });
+  } catch (error) {
+    console.error("Erro ao tentar solicitar dados:", error);
+    res.status(500).json({ message: "Erro ao tentar solicitar dados mais embaixo!" });
+  }
+};
+
+
+export const BuscarOnibus = (req, res) => {
+  const sql = `SELECT * FROM Onibus`;
+
+  conn.query(sql, (err, data) => {
+    if (err) {
+      console.error("Erro ao buscar ônibus:", err);
+      res.status(500).json({ msg: "Erro ao buscar ônibus" });
+      return;
+    }
+    res.status(200).json(data);
+  });
+};
+
+
+export const postOnibus = (req, res) => {
+  const { id_linha, id_motorista, placa, modelo, ano_fabricacao, capacidade } = req.body;
+
+  if (!id_linha) return res.status(400).json({ msg: "O id da linha é obrigatório" });
+  if (!id_motorista) return res.status(400).json({ msg: "O id do motorista é obrigatório" });
+  if (!placa) return res.status(400).json({ msg: "A placa é obrigatória" });
+  if (!modelo) return res.status(400).json({ msg: "O modelo é obrigatório" });
+  if (!ano_fabricacao) return res.status(400).json({ msg: "O ano de fabricação é obrigatório" });
+  if (!capacidade) return res.status(400).json({ msg: "A capacidade é obrigatória" });
+
+
+  const checkSql = `SELECT * FROM Onibus WHERE id_linha = ? AND id_motorista = ? AND placa = ?`;
+  const checkValues = [id_linha, id_motorista, placa];
+
+  conn.query(checkSql, checkValues, (err, data) => {
+    if (err) {
+      console.error("Erro ao verificar se o ônibus já existe:", err);
+      res.status(500).json({ msg: "Erro ao buscar o ônibus" });
       return;
     }
 
-    const sql2 = /*sql*/ `SELECT nome_linha, numero_linha, itinerario FROM linhas WHERE ?? = ?;
-      `;
-    const insertData = ["linha_id", data[0].id_linha];
+    if (data.length > 0) {
+      res.status(409).json({ msg: "O ônibus já existe no banco de dados" });
+      return;
+    }
 
-    conn.query(sql2, insertData, (err, linha) => {
-      if (linha.length === 0) {
-        response.status(404).json({ msg: "linha não existe" });
+    const insertSQL = `INSERT INTO Onibus (id_linha, id_motorista, placa, modelo, ano_fabricacao, capacidade) VALUES (?, ?, ?, ?, ?, ?)`;
+    const insertValues = [id_linha, id_motorista, placa, modelo, ano_fabricacao, capacidade];
+
+    conn.query(insertSQL, insertValues, (err) => {
+      if (err) {
+        console.error("Erro ao cadastrar o ônibus:", err);
+        res.status(500).json({ msg: "Erro ao cadastrar o ônibus" });
         return;
       }
-
-      const sql3 = /*sql*/ `SELECT nome, numero_carteira_habilitacao, data_nascimento  FROM motoristas WHERE ?? = ?`;
-      const insertData = ["motorista_id", data[0].id_motorista];
-
-      conn.query(sql3, insertData, (err, motorista) => {
-        if (motorista.length === 0) {
-          response.status(404).json({ msg: "motorista não existe" });
-          return;
-        }
-        data[0].id_linha = linha;
-        data[0].id_motorista = motorista;
-        response.status(200).json(data);
-      });
+      res.status(201).json({ msg: "Ônibus cadastrado com sucesso!" });
     });
+  });
+};
+
+
+export const buscarOnibus = (req, res) => {
+  const { id } = req.params;
+
+  const sql = `SELECT * FROM Onibus WHERE onibus_id = ?`;
+  conn.query(sql, [id], (err, data) => {
+    if (err) {
+      console.error("Erro ao buscar o ônibus:", err);
+      res.status(500).json({ msg: "Erro ao buscar o ônibus" });
+      return;
+    }
+
+    if (data.length === 0) {
+      res.status(404).json({ msg: "Ônibus não encontrado" });
+      return;
+    }
+
+    res.status(200).json(data[0]);
   });
 };
