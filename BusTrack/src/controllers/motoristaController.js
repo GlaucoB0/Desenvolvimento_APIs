@@ -75,7 +75,7 @@ export const buscarMotorista = (request, response) => {
 
   conn.query(sql, insertSql, (err, data) => {
     if (data.length === 0) {
-      response.status(404).json({ msg: "Funcionario não existe" });
+      response.status(404).json({ msg: "motorista não existe" });
       return;
     }
     response.status(200).json(data);
@@ -85,21 +85,21 @@ export const buscarMotorista = (request, response) => {
 export const deletarMotorista = (request, response) => {
   const { id } = request.params;
 
-  const deleteSql = /*sql*/ `DELETE FROM funcionarios WHERE id = "${id}"`;
+  const deleteSql = /*sql*/ `DELETE FROM motoristas WHERE motorista_id = "${id}"`;
   conn.query(deleteSql, (err, info) => {
     if (err) {
       console.error(err);
-      response.status(500).json({ message: "Erro ao deletar funcionário" });
+      response.status(500).json({ message: "Erro ao deletar motorista" });
       return;
     }
 
     if (info.affectedRows === 0) {
-      response.status(404).json({ message: "Funcionário não encontrado" });
+      response.status(404).json({ message: "motorista não encontrado" });
       return;
     }
 
     response
       .status(204)
-      .json({ message: "Funcionário selecionado foi deletado" });
+      .json({ message: "motorista selecionado foi deletado" });
   });
 };
