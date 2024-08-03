@@ -1,4 +1,7 @@
 
 export const create = async (request, response) => {
-    console.log("AAAAAAAAAAAAAAAAAA")
+    const {nome, peso, cor, descricao} = request.body
+    const disponivel = 1
+
+    response.send("dddddddd")
 }
