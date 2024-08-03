@@ -55,7 +55,7 @@ export const create = async (request, response) => {
         return response.status(500).json({err: "Erro ao cadastrar objeto"})
     }
 
-    if(!request.files){
+    if(request.files){
         // Cadastrar no banco
         const insertImagesSql = /*sql*/`
             INSERT INTO object_images (image_id, objeto_id, image_path)
