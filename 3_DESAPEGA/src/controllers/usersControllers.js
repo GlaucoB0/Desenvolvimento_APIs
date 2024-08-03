@@ -196,6 +196,12 @@ export const editUser = async (request, response) => {
 
     const { nome, email, telefone } = request.body;
 
+    // Adicionar imagem ao objeto
+    let imagem = user.imagem;
+    if (request.file) {
+      imagem = request.file.filename;
+    }
+
     if (!nome) {
       return response.status(400).json({ msgg: "O nome é obrigatorio" });
     }
@@ -220,25 +226,33 @@ export const editUser = async (request, response) => {
       const checkEmailSql = /*sql*/ `SELECT * FROM usuarios WHERE ?? = ? AND ?? != ?`;
       const checkEmailData = ["email", email, "usuario_id", id];
 
-      conn.query(checkEmailSql, checkEmailData, (err, data)=>{
+      conn.query(checkEmailSql, checkEmailData, (err, data) => {
         if (err) {
           return response.status(400).json({ msgg: "Erro ao buscar usuario" });
         }
         if (data.lenght > 0) {
           return response.status(400).json({ msgg: "email já está em uso" });
         }
-        
-        const updateSql = /*sql*/`UPDATE usuarios SET ? WHERE ?? = ?`
-        const updateData = [{nome, email, telefone}, "usuario_id", id]
-        conn.query(updateSql, updateData, (err)=>{
+
+        const updateSql = /*sql*/ `UPDATE usuarios SET ? WHERE ?? = ?`;
+        const updateData = [
+          { nome, email, telefone, imagem },
+          "usuario_id",
+          id,
+        ];
+        conn.query(updateSql, updateData, (err) => {
           if (err) {
-            return response.status(400).json({ msgg: "Erro ao buscar usuario" });
+            return response
+              .status(400)
+              .json({ msgg: "Erro ao buscar usuario" });
           }
-          response.status(200).json({msg: "usuario atualizado com sucesso"})
-        })
-      })
+          response.status(200).json({ msg: "usuario atualizado com sucesso" });
+        });
+      });
     });
   } catch (error) {
-    return response.status(400).json(err);
+    response.status(error.status || 500).json({
+      msg: error.message || "Erro interno no servidor"
+    });
   }
 };
