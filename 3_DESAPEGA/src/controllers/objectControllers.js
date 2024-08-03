@@ -49,32 +49,73 @@ export const create = async (request, response) => {
     disponivel,
   ];
 
-  conn.query(insertSql, insertData, (err, data)=>{
-    if(err){
-        console.error(err)
-        return response.status(500).json({err: "Erro ao cadastrar objeto"})
+  conn.query(insertSql, insertData, (err, data) => {
+    if (err) {
+      console.error(err);
+      return response.status(500).json({ err: "Erro ao cadastrar objeto" });
     }
 
-    if(request.files){
-        // Cadastrar no banco
-        const insertImagesSql = /*sql*/`
+    if (request.files) {
+      // Cadastrar no banco
+      const insertImagesSql = /*sql*/ `
             INSERT INTO object_images (image_id, objeto_id, image_path)
             VALUES ?
+        `;
+      const imageValues = request.files.map((file) => [
+        uuidv4(),
+        objeto_id,
+        file.filename,
+      ]);
+      conn.query(insertImagesSql, [imageValues], (err) => {
+        if (err) {
+          console.error(err);
+          return response.status(500).json({ err: "Erro ao cadastrar objeto" });
+        }
+        response.status(201).json({ msg: "objeto criado" });
+      });
+    } else {
+      response.status(201).json({ msg: "objeto criado" });
+    }
+  });
+};
+
+export const getAllObjectUser = async (request, response) => {
+    try {
+        const token = getToken(request)
+        const user = await getUserByToken(token)
+
+        const userId = user.usuario_id
+        const selectSql = /*sql*/`
+            SELECT 
+                obj.object_id,
+                obj.usuario_id,
+                obj.nome,
+                obj.peso,
+                obj.descricao,
+                obj.cor,
+                GROUP_CONCAT(obj_img.image_path SEPARATOR',') AS image_path
+            FROM
+                objects AS obj
+            LEFT JOIN
+                objeto_images AS obj_img ON obj.objeto_id = obj_img.objeto_id
+            WHERE
+                obj.usuario_id = ?
+            GROUP BY 
+                obj.object_id,
+                obj.usuario_id,
+                obj.nome,
+                obj.peso,
+                obj.descricao,
+                obj.cor
         `
-        const imageValues = request.files.map((file)=>[
-            uuidv4(),
-            objeto_id,
-            file.filename
-        ])
-        conn.query(insertImagesSql, [imageValues], (err)=>{
+        conn.query(selectSql, [userId], (err, data) => {
             if(err){
                 console.error(err)
-                return response.status(500).json({err: "Erro ao cadastrar objeto"})
+                return response.status(500).json({err: "erro"})
             }
-            response.status(201).json({msg: "objeto criado"})
+            response.status(200).json(data)
         })
-    } else {
-        response.status(201).json({msg: "objeto criado"})
+    } catch (error) {
+        
     }
-  })
 };
