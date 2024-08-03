@@ -74,7 +74,7 @@ export const create = async (request, response) => {
             response.status(201).json({msg: "objeto criado"})
         })
     } else {
-
+        response.status(201).json({msg: "objeto criado"})
     }
   })
 };
