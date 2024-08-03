@@ -10,10 +10,10 @@ const imageStore = multer.diskStorage({
   destination: (request, file, cb) => {
     let folter = "";
 
-    if (request.baseUrl.includes("usuarios")) {
-      folter = "usuarios";
-    } else if (request.baseUrl.includes("objetos")) {
-      folter = "objetos";
+    if (request.baseUrl.includes("users")) {
+      folter = "users";
+    } else if (request.baseUrl.includes("objects")) {
+      folter = "objects";
     }
     cb(null, path.join(__dirname, `../public/${folter}`));
   },

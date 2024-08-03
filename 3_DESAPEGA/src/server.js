@@ -10,9 +10,13 @@ import {fileURLToPath} from "node:url"
 
 //Importação dos modulos (TABELA)
 import "./models/usersModel.js";
+import "./models/objectModel.js";
+import "./models/objectImagesModel.js";
 
 //importação das rotas
 import userRoutes from "./routes/userRoutes.js";
+import objectRoutes from "./routes/objectRoutes.js";
+
 
 const app = express();
 
@@ -27,6 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname,"public")))
 
 app.use("/users", userRoutes);
+app.use("/objects", objectRoutes);
 
 //404
 app.use((request, response) => {
